@@ -72,7 +72,86 @@ export default function Home() {
       return res;
     });
   });
-  const AddToCollection = useCallback(() => {
+  const [ret, retVal] = useState('');
+  const SetDetails = useCallback(async (item) => {
+    const yt_api = 'AIzaSyAbgZN1vXeuOtFKpakJ_OEP9IYNFPNJmRQ';
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    let returnVal;
+    const vid_id = item.link.split('=')[1];
+    if (item.details === undefined && item.type === 'image') {
+      const newitem = {
+        ...item,
+        details: {
+          description: 'No description',
+          title: 'No title',
+          localized: '',
+          thumbnails: {
+            high: item.link,
+          },
+          channelTitle: '',
+          channel: {
+            thumbnails: {
+              high: item.link,
+            },
+          },
+          // eslint-disable-next-line promise/no-nesting
+          published: '',
+        },
+      };
+      let setDetailsCollection = JSON.parse(localStorage.getItem('collection'));
+      setDetailsCollection = setDetailsCollection.map((colItem) => {
+        return colItem.itemId === item.itemId ? newitem : colItem;
+      });
+      localStorage.setItem('collection', JSON.stringify(setDetailsCollection));
+      returnVal = newitem;
+    }
+    if (item.details === undefined && item.type === 'video') {
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${vid_id}&key=${yt_api}`
+      )
+        .then((res) => res.json())
+        .then((res) => {
+          const newitem = {
+            ...item,
+            details: {
+              description: res.items[0].snippet.description,
+              title: res.items[0].snippet.title,
+              localized: res.items[0].snippet.localized,
+              thumbnails: res.items[0].snippet.thumbnails,
+              channelTitle: res.items[0].snippet.channelTitle,
+              channel: res.items[0].snippet.channelId,
+              // eslint-disable-next-line promise/no-nesting
+              published: res.items[0].snippet.publishedAt,
+            },
+          };
+          return newitem;
+        })
+        .then(async (newitem) => {
+          // eslint-disable-next-line promise/no-nesting
+          const newresponse = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${newitem.details.channel}&key=${yt_api}`
+          )
+            .then((json) => json.json())
+            .then((json) => json.items[0].snippet);
+          newitem.details.channel = newresponse;
+          return newitem;
+        })
+        .then((newitem) => {
+          let setDetailsCollection = JSON.parse(
+            localStorage.getItem('collection')
+          );
+          setDetailsCollection = setDetailsCollection.map((colItem) => {
+            return colItem.itemId === item.itemId ? newitem : colItem;
+          });
+          localStorage.setItem('collection', JSON.stringify(collection));
+          returnVal = newitem;
+          return newitem;
+        });
+    }
+    retVal(returnVal);
+    return returnVal;
+  });
+  const AddToCollection = useCallback(async () => {
     const image = ['jpg', 'jpeg', 'png', 'gif'];
     const video = ['youtube', 'yt'];
     const url = document.querySelector('#urlField').value;
@@ -90,14 +169,23 @@ export default function Home() {
       type,
     };
     if (collection === null) {
-      const collectionarray = [];
-      collectionarray.push(item);
-      localStorage.setItem('collection', JSON.stringify(collectionarray));
+      await SetDetails(item).then((json) => {
+        const collectionarray = [];
+        collectionarray.push(ret);
+        localStorage.setItem('collection', JSON.stringify(collectionarray));
+        setCollection(collection);
+        return item;
+      });
     } else {
-      collection.push(item);
-      localStorage.setItem('collection', JSON.stringify(collection));
-      setCollection(collection);
+      await SetDetails(item).then((json) => {
+        collection.push(ret);
+        localStorage.setItem('collection', JSON.stringify(collection));
+        setCollection(collection);
+        return item;
+      });
     }
+    SetDetails(item);
+    console.log(retVal);
     setRandomKey(Math.random());
   });
   useEffect(() => {}, [collection]);
