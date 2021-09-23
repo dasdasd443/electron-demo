@@ -18,8 +18,10 @@ import {
   AccountCircle,
   Add,
   CheckCircle,
+  Dashboard,
   ExitToApp,
   Search,
+  ViewList,
 } from '@material-ui/icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Redirect, useHistory } from 'react-router';
@@ -27,6 +29,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { styled } from '@material-ui/styles';
 import FormButtonBlack from '../buttons/formButtonBlack';
 import CollectionItem from '../card/collectionItem';
+import TitleBar from '../grid/titleBar';
 
 export default function Home() {
   const theme = createTheme();
@@ -99,9 +102,14 @@ export default function Home() {
         },
       };
       let setDetailsCollection = JSON.parse(localStorage.getItem('collection'));
-      setDetailsCollection = setDetailsCollection.map((colItem) => {
-        return colItem.itemId === item.itemId ? newitem : colItem;
-      });
+      if (setDetailsCollection === null) {
+        setDetailsCollection = setDetailsCollection.map((colItem) => {
+          return colItem.itemId === item.itemId ? newitem : colItem;
+        });
+      } else {
+        setDetailsCollection = [];
+        setDetailsCollection.push(newitem);
+      }
       localStorage.setItem('collection', JSON.stringify(setDetailsCollection));
       returnVal = newitem;
     }
@@ -140,10 +148,19 @@ export default function Home() {
           let setDetailsCollection = JSON.parse(
             localStorage.getItem('collection')
           );
-          setDetailsCollection = setDetailsCollection.map((colItem) => {
-            return colItem.itemId === item.itemId ? newitem : colItem;
-          });
-          localStorage.setItem('collection', JSON.stringify(collection));
+          if (setDetailsCollection !== null) {
+            setDetailsCollection = setDetailsCollection.map((colItem) => {
+              return colItem.itemId === item.itemId ? newitem : colItem;
+            });
+          } else {
+            setDetailsCollection = [];
+            setDetailsCollection.push(newitem);
+          }
+          localStorage.setItem(
+            'collection',
+            JSON.stringify(setDetailsCollection)
+          );
+          setCollection(setDetailsCollection);
           returnVal = newitem;
           return newitem;
         });
@@ -168,17 +185,17 @@ export default function Home() {
       itemId: uuidv4(),
       type,
     };
-    if (collection === null) {
+    if (collection === null || collection === undefined) {
       await SetDetails(item).then((json) => {
         const collectionarray = [];
-        collectionarray.push(ret);
+        collectionarray.push(json);
         localStorage.setItem('collection', JSON.stringify(collectionarray));
         setCollection(collection);
         return item;
       });
     } else {
       await SetDetails(item).then((json) => {
-        collection.push(ret);
+        collection.push(json);
         localStorage.setItem('collection', JSON.stringify(collection));
         setCollection(collection);
         return item;
@@ -202,10 +219,16 @@ export default function Home() {
       color: color2,
     },
   });
-  const [search, setSearch] = useState('');
-  const [searchCollection, setSearchCollection] = useState(0);
+  // const [searchCollection, setSearchCollection] = useState(0);
   const SearchFunction = useCallback(() => {
-    console.log(5);
+    const search = document.querySelector('#searchField').value;
+    let searchCollection = JSON.parse(localStorage.getItem('collection'));
+    if (searchCollection !== null) {
+      searchCollection = searchCollection.filter((colItem) =>
+        colItem.details.title.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    setCollection(searchCollection);
   });
 
   const [deleteBackdrop, setDeleteBackdrop] = useState(false);
@@ -220,12 +243,14 @@ export default function Home() {
       setDeleteBackdrop(false);
     }, 1000);
   });
+  const [listMode, setListMode] = useState(false);
   return (
     <>
       {user !== null ? (
         <>
           {!loading ? (
             <Grid style={{ height: '100%', overflowX: 'hidden' }} container>
+              <TitleBar />
               <Grid item xs={12} key={randomKey}>
                 <Scrollbars>
                   <Grid container justifyContent="center" spacing={2}>
@@ -339,17 +364,13 @@ export default function Home() {
                                 }}
                               >
                                 <StyledInput
-                                  id="titleField"
+                                  id="searchField"
                                   style={{
                                     width: '100%',
                                   }}
                                   variant="standard"
                                   placeholder="Search with title"
                                   label="Search"
-                                  // value={search}
-                                  // onChange={(event) =>
-                                  //   setSearch(event.target.value)
-                                  // }
                                 />
                                 <IconButton
                                   style={{
@@ -377,6 +398,41 @@ export default function Home() {
                         />
                       </Card>
                     </Grid>
+                    <Grid item xs={12} sm={10}>
+                      {listMode ? (
+                        <Typography
+                          style={{
+                            color,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <IconButton>
+                            <ViewList
+                              onClick={() => setListMode(!listMode)}
+                              style={{ color }}
+                            />
+                          </IconButton>
+                          List Mode
+                        </Typography>
+                      ) : (
+                        <Typography
+                          style={{
+                            color,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <IconButton>
+                            <Dashboard
+                              onClick={() => setListMode(!listMode)}
+                              style={{ color }}
+                            />
+                          </IconButton>
+                          Details
+                        </Typography>
+                      )}
+                    </Grid>
                     <Grid item xs={10} sm={10} style={{ padding: '1rem' }}>
                       <Grid container spacing={2}>
                         {collection !== null
@@ -388,6 +444,7 @@ export default function Home() {
                                   DeleteFunction={() =>
                                     DeleteFunction(item.itemId)
                                   }
+                                  mode={listMode}
                                   item={item}
                                   size={6}
                                 />
@@ -396,7 +453,7 @@ export default function Home() {
                           : null}
                       </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={12} style={{ padding: '1rem' }}>
+                    <Grid item xs={10} sm={10} style={{ padding: '1rem' }}>
                       <Grid container spacing={2}>
                         {collection !== null
                           ? collection.map((item) => {

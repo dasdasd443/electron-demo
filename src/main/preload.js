@@ -1,5 +1,7 @@
+// eslint-disable-next-line global-require
 const { contextBridge, ipcRenderer } = require('electron');
 
+window.val = 5;
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
     myPing() {
