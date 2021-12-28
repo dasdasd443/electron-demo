@@ -1,7 +1,8 @@
 // eslint-disable-next-line global-require
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, ipcMain } = require('electron');
 
-window.val = 5;
+const ipc = ipcMain;
+
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
     myPing() {
@@ -20,6 +21,15 @@ contextBridge.exposeInMainWorld('electron', {
         // Deliberately strip event as it includes `sender`
         ipcRenderer.once(channel, (event, ...args) => func(...args));
       }
+    },
+    close() {
+      ipcRenderer.send('close');
+    },
+    minimize() {
+      ipcRenderer.send('minimize');
+    },
+    maximize() {
+      ipcRenderer.send('maximize');
     },
   },
 });

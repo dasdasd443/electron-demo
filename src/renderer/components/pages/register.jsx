@@ -5,6 +5,7 @@ import {
   CardHeader,
   CircularProgress,
   createTheme,
+  Fade,
   Grid,
   makeStyles,
   TextField,
@@ -14,120 +15,104 @@ import { AccountCircle, Info, LockOpen } from '@material-ui/icons';
 import { withStyles } from '@material-ui/styles';
 import React, { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
+import { useHistory } from 'react-router';
+import { useDispatch } from 'react-redux';
+import store from 'renderer/redux/store';
 import FormButtonBlack from '../buttons/formButtonBlack';
+import StyledInput from '../input/StyledInput';
+import {
+  bgColor,
+  bgColor2,
+  color,
+  color2,
+} from '../variables/backgroundVariables';
+import CenterGrid from '../grid/centerGrid';
+import RegisterTextField from '../input/registerTextField';
+import RegisterFunction from '../functions/register-function';
 
 export default function Register() {
-  const RegisterTextField = withStyles({
-    root: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: '1rem',
-      color: 'black',
-    },
-  })(Typography);
-  const CenterGrid = withStyles({
-    root: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-  })(Grid);
-  const [loading, setLoading] = useState(false);
-  const RegisterFunction = useCallback(() => {
-    let userList = JSON.parse(localStorage.getItem('users'));
-    userList = userList === null ? [] : userList;
-    const user = {
-      id: uuidv4(),
-      username: document.querySelector('#username').value,
-      password: document.querySelector('#password').value,
-      firstName: document.querySelector('#firstname').value,
-      lastName: document.querySelector('#lastname').value,
-    };
-    if (
-      user.username !== '' &&
-      user.password !== '' &&
-      user.firstName !== '' &&
-      user.lastName !== ''
-    ) {
-      setLoading(true);
-      userList.push(user);
-      localStorage.setItem('users', JSON.stringify(userList));
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-    }
+  const history = useHistory();
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(store.getState().loading.value);
+  store.subscribe(() => {
+    setLoading(store.getState().loading.value);
   });
   return (
     <>
       {!loading ? (
         <CenterGrid container>
           <CenterGrid item xs={12} sm={6} md={4}>
-            <Card>
-              <CardContent style={{ padding: '1.5rem' }}>
-                <CenterGrid container spacing={2}>
-                  <CenterGrid item xs={12}>
-                    <RegisterTextField>
-                      <AccountCircle />
-                    </RegisterTextField>
+            <Fade in>
+              <Card style={{ borderRadius: 0 }}>
+                <CardContent
+                  style={{
+                    borderRadius: 0,
+                    padding: '1.5rem',
+                    backgroundColor: bgColor2,
+                  }}
+                >
+                  <CenterGrid container spacing={2}>
+                    <CenterGrid item xs={12}>
+                      <RegisterTextField>
+                        <AccountCircle style={{ color: color2 }} />
+                      </RegisterTextField>
+                    </CenterGrid>
+                    {[
+                      { id: 'firstname', label: 'First Name', type: 'text' },
+                      { id: 'lastname', label: 'Last Name', type: 'text' },
+                      { id: 'username', label: 'Username', type: 'text' },
+                      { id: 'password', label: 'Password', type: 'password' },
+                    ].map((item) => {
+                      return (
+                        <CenterGrid key={item.id} item xs={12}>
+                          <RegisterTextField style={{ width: '100%' }}>
+                            <StyledInput
+                              id={item.id}
+                              style={{ width: '100%' }}
+                              label={item.label}
+                              type={item.type}
+                            />
+                          </RegisterTextField>
+                        </CenterGrid>
+                      );
+                    })}
+                    <CenterGrid item xs={12}>
+                      <RegisterTextField style={{ width: '100%' }}>
+                        <FormButtonBlack
+                          text="Register"
+                          action={() =>
+                            RegisterFunction(
+                              dispatch,
+                              history,
+                              document.querySelector('#username').value,
+                              document.querySelector('#password').value,
+                              document.querySelector('#firstname').value,
+                              document.querySelector('#lastname').value
+                            )
+                          }
+                        />
+                      </RegisterTextField>
+                    </CenterGrid>
                   </CenterGrid>
-                  <CenterGrid item xs={12}>
-                    <RegisterTextField style={{ width: '100%' }}>
-                      <TextField
-                        id="firstname"
-                        style={{ width: '100%' }}
-                        label="First Name"
-                      />
-                    </RegisterTextField>
+                </CardContent>
+                <CardContent
+                  style={{ padding: '1.5rem', backgroundColor: bgColor2 }}
+                >
+                  <CenterGrid>
+                    <Typography align="center" style={{ color: color2 }}>
+                      Already have an account? Click{' '}
+                      <Link
+                        to="/login"
+                        style={{ textDecoration: 'none', color: color2 }}
+                      >
+                        here
+                      </Link>{' '}
+                      to to log in
+                    </Typography>
                   </CenterGrid>
-                  <CenterGrid item xs={12}>
-                    <RegisterTextField style={{ width: '100%' }}>
-                      <TextField
-                        id="lastname"
-                        style={{ width: '100%' }}
-                        label="Last Name"
-                      />
-                    </RegisterTextField>
-                  </CenterGrid>
-                  <CenterGrid item xs={12}>
-                    <RegisterTextField style={{ width: '100%' }}>
-                      <TextField
-                        id="username"
-                        style={{ width: '100%' }}
-                        label="Username"
-                      />
-                    </RegisterTextField>
-                  </CenterGrid>
-                  <CenterGrid item xs={12}>
-                    <RegisterTextField style={{ width: '100%' }}>
-                      <TextField
-                        id="password"
-                        type="password"
-                        style={{ width: '100%' }}
-                        label="Password"
-                      />
-                    </RegisterTextField>
-                  </CenterGrid>
-                  <CenterGrid item xs={12}>
-                    <RegisterTextField style={{ width: '100%' }}>
-                      <FormButtonBlack
-                        text="Register"
-                        action={RegisterFunction}
-                      />
-                    </RegisterTextField>
-                  </CenterGrid>
-                </CenterGrid>
-              </CardContent>
-              <CardContent style={{ padding: '1.5rem' }}>
-                <CenterGrid>
-                  <Typography align="center">
-                    Already have an account? Click <Link to="/login">here</Link>{' '}
-                    to to log in
-                  </Typography>
-                </CenterGrid>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Fade>
           </CenterGrid>
         </CenterGrid>
       ) : (

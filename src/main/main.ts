@@ -79,6 +79,7 @@ const createWindow = async () => {
     width: 1024,
     height: 728,
     icon: getAssetPath('icon.png'),
+    frame: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
@@ -138,4 +139,20 @@ app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) createWindow();
+});
+
+ipcMain.on('close', () => {
+  mainWindow?.close();
+});
+
+ipcMain.on('minimize', () => {
+  mainWindow?.minimize();
+});
+
+ipcMain.on('maximize', () => {
+  if (mainWindow?.isMaximized()) {
+    mainWindow?.restore();
+  } else {
+    mainWindow?.maximize();
+  }
 });

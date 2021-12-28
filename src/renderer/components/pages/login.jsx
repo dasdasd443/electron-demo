@@ -4,6 +4,7 @@ import {
   CardContent,
   CardHeader,
   CircularProgress,
+  Fade,
   Grid,
   makeStyles,
   TextField,
@@ -12,130 +13,123 @@ import {
 import { AccountCircle, LockOpen } from '@material-ui/icons';
 import { withStyles } from '@material-ui/styles';
 import React, { useCallback, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link, Redirect, useHistory } from 'react-router-dom';
+import store from 'renderer/redux/store';
 import FormButtonBlack from '../buttons/formButtonBlack';
+import CenterGrid from '../grid/centerGrid';
+import TitleBar from '../grid/titleBar';
+import RegisterTextField from '../input/registerTextField';
+import StyledInput from '../input/StyledInput';
+import {
+  bgColor,
+  bgColor2,
+  color,
+  color2,
+} from '../variables/backgroundVariables';
+import { setTrue, setFalse } from '../../redux/counter/counter';
+import LoginFunction from '../functions/login-function';
 
 export default function Login() {
+  const [loading, setLoading] = useState(store.getState().loading.value);
+  const dispatch = useDispatch();
   const history = useHistory();
-  const LoginTextField = withStyles({
-    root: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: '1rem',
-      color: 'black',
-    },
-  })(Typography);
-  const CenterGrid = withStyles({
-    root: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-  })(Grid);
-  const [loading, setLoading] = useState(false);
-  const LoginFunction = useCallback(() => {
-    let error = 0;
-    const username = document.querySelector('#username').value;
-    const password = document.querySelector('#password').value;
-    error = username === '' ? 1 : 0;
-    error = password === '' ? 2 : 0;
-    if (error === 0) {
-      const userList = JSON.parse(localStorage.getItem('users'));
-      if (userList !== null) {
-        if (userList.some((user) => user.username === username)) {
-          userList.forEach((user) => {
-            if (user.username === username) {
-              if (user.password === password) {
-                localStorage.setItem('cur-user', JSON.stringify(user));
-              } else if (user.password !== password) {
-                error = 4;
-              }
-            }
-          });
-        } else {
-          error = 3;
-        }
-      }
-    }
-    const login = new Promise((resolve, reject) => {
-      setLoading(true);
-      if (error === 0) {
-        setTimeout(() => {
-          return resolve(true);
-        }, 2000);
-      } else {
-        setTimeout(() => {
-          // eslint-disable-next-line prefer-promise-reject-errors
-          return reject(error);
-        }, 2000);
-      }
-    });
-    login
-      .then((res) => {
-        setLoading(false);
-        history.push('/');
-        return res;
-      })
-      .catch((rej) => {
-        setLoading(false);
-        return rej;
-      });
+  store.subscribe(() => {
+    setLoading(store.getState().loading.value);
   });
   return (
     <>
       {!loading ? (
         <CenterGrid container>
           <CenterGrid item xs={12} sm={6} md={4}>
-            <Card>
-              <CardContent style={{ padding: '1.5rem' }}>
-                <CenterGrid container spacing={2}>
-                  <CenterGrid item xs={12}>
-                    <LoginTextField>
-                      <AccountCircle />
-                    </LoginTextField>
+            <Fade in>
+              <Card style={{ backgroundColor: bgColor2 }}>
+                <CardContent style={{ padding: '1.5rem' }}>
+                  <CenterGrid container spacing={2}>
+                    {[
+                      {
+                        id: 1,
+                        content: (
+                          <RegisterTextField>
+                            <AccountCircle style={{ color: color2 }} />
+                          </RegisterTextField>
+                        ),
+                      },
+                      {
+                        id: 2,
+                        content: (
+                          <RegisterTextField style={{ width: '100%' }}>
+                            <AccountCircle
+                              style={{
+                                position: 'relative',
+                                bottom: '-10px',
+                                color: color2,
+                              }}
+                            />
+                            <StyledInput
+                              id="username"
+                              style={{ width: '100%' }}
+                              label="Username"
+                            />
+                          </RegisterTextField>
+                        ),
+                      },
+                      {
+                        id: 3,
+                        content: (
+                          <RegisterTextField style={{ width: '100%' }}>
+                            <LockOpen
+                              style={{
+                                position: 'relative',
+                                bottom: '-10px',
+                                color: color2,
+                              }}
+                            />
+                            <StyledInput
+                              id="password"
+                              style={{ width: '100%' }}
+                              type="password"
+                              label="Password"
+                            />
+                          </RegisterTextField>
+                        ),
+                      },
+                      {
+                        id: 4,
+                        content: (
+                          <RegisterTextField style={{ width: '100%' }}>
+                            <FormButtonBlack
+                              text="Login"
+                              action={() => LoginFunction(dispatch, history)}
+                            />
+                          </RegisterTextField>
+                        ),
+                      },
+                    ].map((item) => {
+                      return (
+                        <CenterGrid key={item.id} item xs={12}>
+                          {item.content}
+                        </CenterGrid>
+                      );
+                    })}
                   </CenterGrid>
-                  <CenterGrid item xs={12}>
-                    <LoginTextField style={{ width: '100%' }}>
-                      <AccountCircle
-                        style={{ position: 'relative', bottom: '-10px' }}
-                      />
-                      <TextField
-                        id="username"
-                        style={{ width: '100%' }}
-                        label="Username"
-                      />
-                    </LoginTextField>
+                </CardContent>
+                <CardContent style={{ padding: '1.5rem' }}>
+                  <CenterGrid>
+                    <Typography align="center" style={{ color: color2 }}>
+                      Don`t have an account? Click{' '}
+                      <Link
+                        to="/register"
+                        style={{ textDecoration: 'none', color }}
+                      >
+                        here
+                      </Link>{' '}
+                      to to sign up
+                    </Typography>
                   </CenterGrid>
-                  <CenterGrid item xs={12}>
-                    <LoginTextField style={{ width: '100%' }}>
-                      <LockOpen
-                        style={{ position: 'relative', bottom: '-10px' }}
-                      />
-                      <TextField
-                        id="password"
-                        style={{ width: '100%' }}
-                        type="password"
-                        label="Password"
-                      />
-                    </LoginTextField>
-                  </CenterGrid>
-                  <CenterGrid item xs={12}>
-                    <LoginTextField style={{ width: '100%' }}>
-                      <FormButtonBlack text="Login" action={LoginFunction} />
-                    </LoginTextField>
-                  </CenterGrid>
-                </CenterGrid>
-              </CardContent>
-              <CardContent style={{ padding: '1.5rem' }}>
-                <CenterGrid>
-                  <Typography align="center">
-                    Don`t have an account? Click{' '}
-                    <Link to="/register">here</Link> to to sign up
-                  </Typography>
-                </CenterGrid>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Fade>
           </CenterGrid>
         </CenterGrid>
       ) : (

@@ -14,6 +14,16 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Scrollbars } from 'react-custom-scrollbars';
 import $ from 'jquery';
 import ReactPlayer from 'react-player';
+import { useDispatch } from 'react-redux';
+import { showModal } from 'renderer/redux/counter/modal';
+import StyledInput from '../input/StyledInput';
+import {
+  bgColor,
+  bgColor2,
+  color,
+  color2,
+} from '../variables/backgroundVariables';
+import ItemModal from './modal';
 
 const {
   Grid,
@@ -36,12 +46,9 @@ const {
 
 // eslint-disable-next-line react/prop-types
 const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
+  const dispatch = useDispatch();
   const [collectionItem, setCollectionItem] = useState(item);
   const theme = createTheme();
-  const bgColor = '#0F4C75';
-  const bgColorText = theme.palette.getContrastText('#0F4C75');
-  const bgColor2 = '#BBE1FA';
-  const bgColor2Text = theme.palette.getContrastText('#BBE1FA');
   // eslint-disable-next-line @typescript-eslint/naming-convention
   const [modalOpen, setModalOpen] = useState(false);
   const [backdrop, setBackdrop] = useState(false);
@@ -80,7 +87,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
   const [imageHover, setImageHover] = useState(false);
   return (
     <>
-      <Modal
+      {/* <Modal
         style={{ outline: `none` }}
         aria-labelledby="spring-modal-title"
         aria-describedby="spring-modal-description"
@@ -123,7 +130,10 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                                     .url
                                 }
                               />
-                              <Typography variant="h6">
+                              <Typography
+                                variant="h6"
+                                style={{ color: color2 }}
+                              >
                                 {collectionItem.details.channelTitle}
                               </Typography>
                             </>
@@ -139,7 +149,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                             setBackdrop(!backdrop);
                           }}
                         >
-                          <Close style={{ color: '#0F4C75' }} />
+                          <Close style={{ color: color2 }} />
                         </IconButton>
                       </Typography>
                     }
@@ -173,7 +183,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                         flexDirection: 'column',
                         gap: '1rem',
                         backgroundColor: bgColor2,
-                        color: bgColor2Text,
+                        color: color2,
                       }}
                     >
                       <Typography
@@ -193,7 +203,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                             {title}{' '}
                           </Typography>
                         ) : (
-                          <TextField
+                          <StyledInput
                             style={{ width: '100%' }}
                             autoFocus
                             value={title}
@@ -204,7 +214,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                             }}
                           />
                         )}
-                        <Edit style={{ color: '#0F4C75' }} />
+                        <Edit style={{ color: color2 }} />
                         <Backdrop style={{ zIndex: 9999 }} open={editBackdrop}>
                           <Grow in={editBackdrop}>
                             <Typography
@@ -236,7 +246,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                           onClick={() => setDescriptionEdit(true)}
                         />
                       ) : (
-                        <TextField
+                        <StyledInput
                           style={{ width: '100%' }}
                           autoFocus
                           value={description}
@@ -259,13 +269,14 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
             </Fade>
           </Grid>
         </Grid>
-      </Modal>
+      </Modal> */}
+      <ItemModal collectionItem={item} />
       {!mode ? (
         <Grow in={!mode}>
           <Grid item xs={12} md={size} style={{ overflow: 'hidden' }}>
             <Card
               style={{
-                borderRadius: '25px',
+                borderRadius: '0',
                 position: 'relative',
                 overflow: 'visible',
                 zIndex: 1,
@@ -291,10 +302,9 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
               <CardContent
                 style={{
                   overflow: 'hidden',
-                  borderRadius:
-                    item.type === 'video' ? '23px 0 0 0' : '0 0 0 0',
+                  borderRadius: item.type === 'video' ? '0 0 0 0' : '0 0 0 0',
                   backgroundColor: bgColor2,
-                  padding: '5px',
+                  padding: '0',
                   position: 'relative',
                 }}
               >
@@ -314,8 +324,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                   <Typography style={{ display: 'flex', gap: '1rem' }}>
                     <IconButton
                       onClick={() => {
-                        setModalOpen(true);
-                        setBackdrop(!backdrop);
+                        dispatch(showModal());
                       }}
                     >
                       <Visibility
@@ -333,9 +342,9 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                   <CardMedia
                     component="img"
                     style={{
-                      width: '98%',
-                      height: '97.5%',
-                      borderRadius: item.type === 'video' ? '23px 0 0 0' : '0',
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: item.type === 'video' ? '0 0 0 0' : '0',
                       backgroundColor: 'rgba(0,0,0,0.5)',
                       position: 'absolute',
                       zIndex: 9,
@@ -347,7 +356,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                   <>
                     <CardMedia
                       style={{
-                        borderRadius: '23px 0 0 0',
+                        borderRadius: '0 0 0 0',
                         '&:hover': { opacity: '0.5' },
                       }}
                       component="img"
@@ -367,11 +376,11 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                 <CardContent
                   style={{
                     backgroundColor: bgColor2,
-                    color: bgColor2Text,
+                    color: color2,
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '1rem',
-                    borderRadius: '0 0 23px 23px',
+                    borderRadius: '0',
                   }}
                 >
                   {item.type === 'video' ? (
@@ -388,8 +397,8 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                       {collectionItem.details.channelTitle}
                     </Typography>
                   ) : null}
-                  <hr style={{ borderBottom: `1px solid ${bgColor2Text}` }} />
-                  <Typography variant="h6" style={{ lineHeight: 1.3 }}>
+                  <hr style={{ borderBottom: `1px solid ${color2}` }} />
+                  <Typography style={{ lineHeight: 1.3 }}>
                     {collectionItem.details.title}
                   </Typography>
                 </CardContent>
@@ -399,7 +408,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
         </Grow>
       ) : (
         <Fade in={mode}>
-          <Grid item xs={12} md={size} style={{ overflow: 'hidden' }}>
+          <Grid item xs={12} md={12} style={{ overflow: 'hidden' }}>
             <Card>
               <CardContent
                 style={{
@@ -410,6 +419,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                   justifyContent: 'space-between',
                   position: 'relative',
                   padding: '5px',
+                  color: color2,
                 }}
               >
                 <p
@@ -419,7 +429,7 @@ const CollectionItem = ({ item, size, DeleteFunction, mode }) => {
                     borderTop: '30px solid transparent',
                     borderBottom: '30px solid transparent',
                     transform: 'rotateZ(-45deg)',
-                    borderLeft: '30px solid rgb(15, 76, 117)',
+                    borderLeft: `30px solid ${bgColor}`,
                     position: 'absolute',
                     right: '-5px',
                     top: '-21px',

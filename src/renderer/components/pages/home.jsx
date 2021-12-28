@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/naming-convention */
 import {
   Backdrop,
@@ -9,6 +10,7 @@ import {
   Grid,
   Grow,
   IconButton,
+  makeStyles,
   TextField,
   Typography,
   withStyles,
@@ -27,18 +29,29 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Redirect, useHistory } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 import { styled } from '@material-ui/styles';
+import { useDispatch } from 'react-redux';
+import { unAuthenticate } from 'renderer/redux/counter/authenticate';
+import { setFalse, setTrue } from 'renderer/redux/counter/counter';
+import store from 'renderer/redux/store';
+import { setModeDetails, setModeList } from 'renderer/redux/counter/mode';
 import FormButtonBlack from '../buttons/formButtonBlack';
 import CollectionItem from '../card/collectionItem';
 import TitleBar from '../grid/titleBar';
+import StyledInput from '../input/StyledInput';
+import {
+  bgColor,
+  bgColor2,
+  color,
+  color2,
+} from '../variables/backgroundVariables';
+import InputFields from '../input/InputFields';
+import ItemBookMark from '../misc/item-bookmark';
 
 export default function Home() {
   const theme = createTheme();
-  const bgColor = '#0F4C75';
-  const color = theme.palette.getContrastText(bgColor);
-  const bgColor2 = '#BBE1FA';
-  const color2 = theme.palette.getContrastText(bgColor2);
   const user = JSON.parse(localStorage.getItem('cur-user'));
   const [randomKey, setRandomKey] = useState(Math.random());
+  const dispatch = useDispatch();
   const CenterGrid = withStyles({
     root: {
       display: 'flex',
@@ -63,14 +76,15 @@ export default function Home() {
   const Logout = useCallback(() => {
     const logout = new Promise((resolve, reject) => {
       localStorage.removeItem('cur-user');
-      setLoading(true);
+      dispatch(setTrue());
+      dispatch(unAuthenticate());
       setTimeout(() => {
         return resolve(true);
       }, 2000);
     });
     // eslint-disable-next-line promise/catch-or-return
     logout.then((res) => {
-      setLoading(false);
+      dispatch(setFalse());
       history.push('/login');
       return res;
     });
@@ -202,24 +216,9 @@ export default function Home() {
       });
     }
     SetDetails(item);
-    console.log(retVal);
     setRandomKey(Math.random());
   });
   useEffect(() => {}, [collection]);
-  const StyledInput = styled(TextField)({
-    '& label.Mui-focused': {
-      color: color2,
-    },
-    '& .MuiInput-underline:after': {
-      borderBottomColor: color2,
-    },
-    '& .MuiInputBase-input': {
-      position: 'relative',
-      fontSize: 16,
-      color: color2,
-    },
-  });
-  // const [searchCollection, setSearchCollection] = useState(0);
   const SearchFunction = useCallback(() => {
     const search = document.querySelector('#searchField').value;
     let searchCollection = JSON.parse(localStorage.getItem('collection'));
@@ -243,14 +242,17 @@ export default function Home() {
       setDeleteBackdrop(false);
     }, 1000);
   });
-  const [listMode, setListMode] = useState(false);
+  const [listMode, setListMode] = useState(store.getState().mode.value);
+  store.subscribe(() => {
+    setListMode(store.getState().mode.value);
+  });
+  const [size, setSize] = useState(4);
   return (
     <>
       {user !== null ? (
         <>
           {!loading ? (
-            <Grid style={{ height: '100%', overflowX: 'hidden' }} container>
-              <TitleBar />
+            <Grid style={{ height: '100%', overflow: 'hidden' }} container>
               <Grid item xs={12} key={randomKey}>
                 <Scrollbars>
                   <Grid container justifyContent="center" spacing={2}>
@@ -263,18 +265,11 @@ export default function Home() {
                           zIndex: 1,
                         }}
                       >
-                        <p
-                          style={{
-                            width: 0,
-                            height: 0,
-                            borderTop: `50px solid transparent`,
-                            borderBottom: `50px solid transparent`,
-                            transform: 'rotateZ(-45deg)',
-                            borderLeft: `50px solid ${bgColor}`,
-                            position: 'absolute',
-                            right: '-7px',
-                            top: '-35px',
-                          }}
+                        <ItemBookMark
+                          bgColor={bgColor}
+                          size={50}
+                          right={-7}
+                          top={-35}
                         />
                         <Backdrop
                           style={{ zIndex: 9999999 }}
@@ -398,7 +393,17 @@ export default function Home() {
                         />
                       </Card>
                     </Grid>
-                    <Grid item xs={12} sm={10}>
+                    <Grid
+                      item
+                      xs={12}
+                      sm={10}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '1rem',
+                      }}
+                    >
                       {listMode ? (
                         <Typography
                           style={{
@@ -407,11 +412,10 @@ export default function Home() {
                             alignItems: 'center',
                           }}
                         >
-                          <IconButton>
-                            <ViewList
-                              onClick={() => setListMode(!listMode)}
-                              style={{ color }}
-                            />
+                          <IconButton
+                            onClick={() => dispatch(setModeDetails())}
+                          >
+                            <ViewList style={{ color }} />
                           </IconButton>
                           List Mode
                         </Typography>
@@ -423,15 +427,51 @@ export default function Home() {
                             alignItems: 'center',
                           }}
                         >
-                          <IconButton>
-                            <Dashboard
-                              onClick={() => setListMode(!listMode)}
-                              style={{ color }}
-                            />
+                          <IconButton onClick={() => dispatch(setModeList())}>
+                            <Dashboard style={{ color }} />
                           </IconButton>
                           Details
                         </Typography>
                       )}
+                      <Typography>
+                        <Typography
+                          style={{
+                            color,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <IconButton
+                            onClick={() => {
+                              let sizeOption = size;
+                              // eslint-disable-next-line default-case
+                              switch (sizeOption) {
+                                case 4:
+                                  setSize(6);
+                                  sizeOption = 6;
+                                  break;
+                                case 6:
+                                  setSize(3);
+                                  sizeOption = 3;
+                                  break;
+                                case 3:
+                                  setSize(4);
+                                  sizeOption = 4;
+                                  break;
+                              }
+                            }}
+                          >
+                            <Dashboard style={{ color }} />
+                          </IconButton>
+                          {size === 3
+                            ? 'Small View'
+                            : size === 4
+                            ? 'Normal View'
+                            : size === 6
+                            ? 'Large View'
+                            : null}
+                        </Typography>
+                      </Typography>
                     </Grid>
                     <Grid item xs={10} sm={10} style={{ padding: '1rem' }}>
                       <Grid container spacing={2}>
@@ -446,7 +486,7 @@ export default function Home() {
                                   }
                                   mode={listMode}
                                   item={item}
-                                  size={6}
+                                  size={size}
                                 />
                               ) : null;
                             })
